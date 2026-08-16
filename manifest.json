@@ -1,0 +1,22 @@
+{
+  "short_name": "PayTrack",
+  "name": "Payment Tracker",
+  "icons": [
+    {
+      "src": "https://track.matrixevo.com/assets/img/favicon-128x128.png?h=d67b25faafe801c38768d86d01e2499a",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://track.matrixevo.com/assets/img/favicon-256x256.png?h=d67b25faafe801c38768d86d01e2499a",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "index.html",
+  "display": "standalone",
+  "theme_color": "#0d6efd",
+  "background_color": "#ffffff"
+}

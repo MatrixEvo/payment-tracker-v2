@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Payment Tracker 2.0</title>
+    <meta name="theme-color" content="#1e1b4b">
+    
+    <!-- PWA Requirements -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://track.matrixevo.com/assets/img/favicon-256x256.png?h=d67b25faafe801c38768d86d01e2499a">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#38bdf8',
+                        'accent-hover': '#0284c7',
+                        danger: '#ef4444',
+                        success: '#22c55e',
+                        warning: '#eab308'
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- FullCalendar -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Sortable.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js"></script>
+    
+    <!-- Premium Styles -->
+    <link rel="stylesheet" href="assets/css/app.css">
+</head>
+<body class="bg-gradient-to-br from-slate-900 to-indigo-950 text-slate-100 min-h-screen overflow-x-hidden">
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar glass-panel">
+        <a href="#" class="hidden md:flex text-2xl font-bold items-center gap-3 mb-12 text-slate-100 no-underline hover:text-white transition-colors">
+            <i data-lucide="landmark" class="text-accent w-8 h-8"></i>
+            <span>PayTrack</span>
+        </a>
+        
+        <nav class="contents md:flex md:flex-col gap-2">
+            <a href="#analytics" class="nav-link-custom active" data-view="view-analytics">
+                <i data-lucide="pie-chart" class="w-5 h-5"></i> Analytics
+            </a>
+            <a href="#tracker" class="nav-link-custom" data-view="view-tracker">
+                <i data-lucide="list-checks" class="w-5 h-5"></i> Tracker
+            </a>
+            <a href="#calendar" class="nav-link-custom" data-view="view-calendar">
+                <i data-lucide="calendar-days" class="w-5 h-5"></i> Calendar
+            </a>
+            <a href="#forecast" class="nav-link-custom" data-view="view-forecast">
+                <i data-lucide="trending-up" class="w-5 h-5"></i> Forecast
+            </a>
+        </nav>
+        
+        <div class="contents md:mt-auto md:flex md:flex-col gap-4">
+            <nav class="contents md:flex md:flex-col gap-2">
+                <a href="#methods" class="nav-link-custom" data-view="view-methods">
+                    <i data-lucide="credit-card" class="w-5 h-5"></i> Methods
+                </a>
+                <a href="#categories" class="nav-link-custom" data-view="view-categories">
+                    <i data-lucide="tags" class="w-5 h-5"></i> Categories
+                </a>
+            </nav>
+            <div class="hidden md:block premium-card px-3 py-4 mb-0 text-center text-xs">
+                <p class="mb-2 text-slate-300 whitespace-nowrap">Data securely stored locally.</p>
+                <div class="flex justify-center gap-2 mt-2">
+                    <button class="w-full bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="exportBtn"><i data-lucide="download" class="w-4 h-4"></i> Export</button>
+                    <button class="w-full bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="importBtn"><i data-lucide="upload" class="w-4 h-4"></i> Import</button>
+                    <input type="file" id="importFileInput" accept=".json" hidden>
+                </div>
+                <div class="mt-2">
+                    <button class="w-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="resetDataBtn"><i data-lucide="trash-2" class="w-4 h-4"></i> Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        
+        <!-- ==================== TRACKER VIEW ==================== -->
+        <div id="view-tracker" class="view-container">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Monthly Tracker</h2>
+                    <p class="text-slate-300 m-0">Manage your recurring payments and methods.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="prevMonth" aria-label="Previous Month"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <h4 id="currentMonthStr" class="text-xl font-bold min-w-[150px] text-center m-0" aria-live="polite">Month</h4>
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="nextMonth" aria-label="Next Month"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap" id="resetTrackerMonth">This Month</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="premium-card text-center">
+                    <p class="text-slate-300 mb-1">Total Due</p>
+                    <div class="stat-value due" id="dueAmount">RM 0.00</div>
+                </div>
+                <div class="premium-card text-center">
+                    <p class="text-slate-300 mb-1">Total Paid</p>
+                    <div class="stat-value paid" id="paidAmount">RM 0.00</div>
+                </div>
+                <div class="premium-card text-center">
+                    <p class="text-slate-300 mb-1">Total Expected</p>
+                    <div class="stat-value total" id="totalAmount">RM 0.00</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 mb-4">
+                <button class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2" id="addEntryBtn"><i data-lucide="plus" class="w-5 h-5"></i> Add Entry</button>
+            </div>
+            
+            <div id="methodsContainer" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 gap-6">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- ==================== CALENDAR VIEW ==================== -->
+        <div id="view-calendar" class="view-container flex flex-col min-h-[calc(100vh-6rem)] md:min-h-0 md:h-[calc(100vh-3rem)]">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Calendar</h2>
+                    <p class="text-slate-300 m-0">Visual schedule of your due dates.</p>
+                </div>
+                <div class="flex gap-4 text-slate-300 text-sm">
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 bg-amber-600 rounded-sm"></span> Upcoming</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 bg-emerald-600 rounded-sm"></span> Paid</div>
+                    <div class="flex items-center gap-2"><span class="w-3 h-3 bg-rose-600 rounded-sm"></span> Due/Overdue</div>
+                </div>
+            </div>
+            
+            <div class="premium-card !p-0 flex-grow relative mb-0 overflow-hidden">
+                <div class="absolute inset-5">
+                    <div id="calendar" class="h-full w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ANALYTICS VIEW ==================== -->
+        <div id="view-analytics" class="view-container active flex flex-col min-h-[calc(100vh-6rem)] md:min-h-0 md:h-[calc(100vh-3rem)]">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Analytics</h2>
+                    <p class="text-slate-300 m-0">Insights into your spending habits.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="prevAnalyticsMonth" aria-label="Previous Month"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <h4 id="analyticsMonthStr" class="text-xl font-bold min-w-[150px] text-center m-0" aria-live="polite">Month</h4>
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="nextAnalyticsMonth" aria-label="Next Month"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap" id="resetAnalyticsMonth">This Month</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 flex-grow min-h-0">
+                <!-- Side Column: High-level Stats -->
+                <div class="xl:col-span-1 flex flex-col gap-6 min-h-0">
+                    <div class="premium-card mb-0 flex-none py-4">
+                        <h6 class="text-slate-300 mb-3 text-sm font-bold uppercase tracking-wider">Cash Flow Summary</h6>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-slate-300">Income</span>
+                            <span class="text-sm font-bold text-success" id="analyticsTotalIncome">RM 0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-slate-300">Expenses</span>
+                            <span class="text-sm font-bold text-danger" id="analyticsTotalExpense">RM 0.00</span>
+                        </div>
+                        <div class="w-full bg-black/30 h-2 rounded-full overflow-hidden mt-3 flex">
+                            <div class="bg-success h-full transition-all duration-500" id="analyticsIncomeBar" style="width: 50%"></div>
+                            <div class="bg-danger h-full transition-all duration-500" id="analyticsExpenseBar" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <div class="premium-card mb-0 flex flex-col justify-center text-center py-4 flex-none">
+                        <p class="text-slate-300 mb-1">Total Spending</p>
+                        <div class="stat-value text-3xl" id="analyticsTotalSpending">RM 0.00</div>
+                        <div class="mt-2 text-sm" id="analyticsMoM">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="premium-card flex-grow mb-0 flex flex-col min-h-0">
+                        <h6 class="text-slate-300 mb-4 flex items-center gap-2 flex-none"><i data-lucide="trophy" class="w-5 h-5 text-yellow-500"></i> Top 6 Expenses</h6>
+                        <div id="analyticsTopExpenses" class="flex flex-col gap-3 overflow-y-auto pr-2 flex-grow">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Column: Charts -->
+                <div class="xl:col-span-3 flex flex-col gap-6 min-h-0">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-none">
+                        <div class="premium-card mb-0">
+                            <h5 class="text-lg font-bold mb-4">Expenses by Category</h5>
+                            <div class="chart-wrapper h-[240px] flex justify-center">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="premium-card mb-0">
+                            <h5 class="text-lg font-bold mb-4">Expenses by Method</h5>
+                            <div class="chart-wrapper h-[240px] flex justify-center">
+                                <canvas id="methodChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="premium-card flex-grow mb-0 flex flex-col min-h-[300px] lg:min-h-0">
+                        <h5 class="text-lg font-bold mb-4 flex-none">25-Month Spending Trend</h5>
+                        <div class="chart-wrapper flex-grow min-h-0 relative">
+                            <div class="absolute inset-0">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== FORECAST VIEW ==================== -->
+        <div id="view-forecast" class="view-container lg:h-[calc(100vh-4rem)] lg:flex lg:flex-col">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">10-Year Forecast</h2>
+                    <p class="text-slate-300 m-0">Project your cash flow into the future.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:flex-1 lg:min-h-0">
+                <!-- Forecast Sidebar -->
+                <div class="lg:col-span-3 lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2">
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Global Settings</h5>
+                        <form id="configForm">
+                            <div class="mb-4">
+                                <label for="startingBalance" class="block text-sm font-medium text-slate-300 mb-1">Starting Cash (RM)</label>
+                                <input type="number" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="startingBalance" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="monthlyIncome" class="block text-sm font-medium text-slate-300 mb-1">Monthly Income (RM)</label>
+                                <input type="number" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="monthlyIncome" placeholder="0.00" step="0.01" min="0" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="incomeGrowth" class="block text-sm font-medium text-slate-300 mb-1">Annual Income Growth %</label>
+                                <input type="number" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="incomeGrowth" placeholder="0.0" step="0.1" min="0">
+                            </div>
+                            <div class="mb-4">
+                                <label for="expenseInflation" class="block text-sm font-medium text-slate-300 mb-1">Annual Expense Inflation %</label>
+                                <input type="number" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="expenseInflation" placeholder="0.0" step="0.1" min="0">
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300">Update Settings</button>
+                        </form>
+                        
+                        <hr class="my-6 border-white/10">
+                        
+                        <h5 class="text-lg font-bold mb-2">One-Off Events</h5>
+                        <p class="text-slate-300 text-sm mb-4">Simulate massive future purchases.</p>
+                        <form id="oneOffForm" class="mb-4 flex flex-col gap-3">
+                            <div>
+                                <label for="oneOffName" class="sr-only">Event Name</label>
+                                <input type="text" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="oneOffName" placeholder="e.g. Buy Car" required>
+                            </div>
+                            <div>
+                                <label for="oneOffAmount" class="sr-only">Event Amount</label>
+                                <input type="number" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" id="oneOffAmount" placeholder="Amount (RM)" step="0.01" min="0" required>
+                            </div>
+                            <div>
+                                <label for="oneOffMonth" class="sr-only">Event Month</label>
+                                <select class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" id="oneOffMonth" required>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-all"><i data-lucide="plus" class="w-4 h-4"></i> Add Event</button>
+                        </form>
+                        <div id="oneOffList" class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forecast Main -->
+                <div class="lg:col-span-9 flex flex-col gap-6 lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2">
+                    <!-- Insight Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="premium-card text-center mb-0">
+                            <p class="text-slate-300 mb-1">Projected 10-Yr Balance</p>
+                            <div class="stat-value text-accent" id="insightFinalBalance">RM 0.00</div>
+                        </div>
+                        <div class="premium-card text-center mb-0">
+                            <p class="text-slate-300 mb-1">Avg Monthly Savings</p>
+                            <div class="stat-value text-green-500" id="insightAvgSavings">RM 0.00</div>
+                        </div>
+                        <div class="premium-card text-center mb-0">
+                            <p class="text-slate-300 mb-1">Total Cash Flow (In vs Out)</p>
+                            <div class="stat-value text-lg" id="insightCashFlow">RM 0.00</div>
+                        </div>
+                    </div>
+
+                    <div class="premium-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h5 class="text-lg font-bold m-0">Cash Flow Chart</h5>
+                            <div class="flex rounded-md shadow-sm" role="group">
+                                <input type="radio" class="peer/monthly hidden" name="forecastViewToggle" id="viewMonthly" value="monthly" checked autocomplete="off">
+                                <label class="px-3 py-1.5 text-sm font-medium border border-white/10 rounded-l-lg cursor-pointer bg-black/20 text-slate-300 peer-checked/monthly:bg-indigo-600 peer-checked/monthly:text-white peer-checked/monthly:border-indigo-600 hover:bg-white/10" for="viewMonthly">Monthly</label>
+                              
+                                <input type="radio" class="peer/yearly hidden" name="forecastViewToggle" id="viewYearly" value="yearly" autocomplete="off">
+                                <label class="px-3 py-1.5 text-sm font-medium border border-l-0 border-white/10 rounded-r-lg cursor-pointer bg-black/20 text-slate-300 peer-checked/yearly:bg-indigo-600 peer-checked/yearly:text-white peer-checked/yearly:border-indigo-600 hover:bg-white/10" for="viewYearly">Yearly</label>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper overflow-x-auto overflow-y-hidden w-full custom-scrollbar">
+                            <div class="chart-area w-[2800px] h-[400px]" id="chartAreaContainer">
+                                <canvas id="forecastChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Projection Details</h5>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left text-sm">
+                                <thead class="bg-white/5 border-b border-white/10">
+                                    <tr>
+                                        <th class="p-3 font-medium">Month</th>
+                                        <th class="p-3 font-medium text-right">Starting Balance</th>
+                                        <th class="p-3 font-medium text-right text-green-500">Income</th>
+                                        <th class="p-3 font-medium text-right text-red-500">Expenses</th>
+                                        <th class="p-3 font-bold text-right">Ending Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="forecastTableBody" class="[&>tr:nth-child(odd)]:bg-white/5 [&>tr]:border-b [&>tr]:border-white/5">
+                                    <!-- Rows populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CATEGORIES VIEW ==================== -->
+        <div id="view-categories" class="view-container">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Category Management</h2>
+                    <p class="text-slate-300 m-0">Customize your expense categories and colors.</p>
+                </div>
+                <button class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2" id="addCategoryBtn"><i data-lucide="plus" class="w-5 h-5"></i> Add Category</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="categoriesGrid">
+                <!-- Categories populated by JS -->
+            </div>
+        </div>
+
+        <!-- ==================== METHODS VIEW ==================== -->
+        <div id="view-methods" class="view-container">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Payment Methods</h2>
+                    <p class="text-slate-300 m-0">Manage your payment methods and theme colors.</p>
+                </div>
+                <button class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2" id="addMethodBtn"><i data-lucide="plus" class="w-5 h-5"></i> Add Method</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="methodsGrid">
+                <!-- Methods populated by JS -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==================== SHARED MODALS ==================== -->
+    
+    <!-- Category Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="categoryModal" role="dialog" aria-modal="true" aria-labelledby="categoryModalLabel" onclick="hideModal('categoryModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="categoryModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h5 class="text-lg font-bold text-white m-0" id="categoryModalLabel">Add Category</h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('categoryModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4">
+                <form id="categoryForm">
+                    <div class="mb-4">
+                        <label for="categoryName" class="block text-sm font-medium mb-1">Name</label>
+                        <input type="text" id="categoryName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" placeholder="e.g. Shopping" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="categoryColor" class="block text-sm font-medium mb-1">Theme Color</label>
+                        <div class="flex items-center gap-4">
+                            <input type="color" id="categoryColor" class="w-12 h-12 rounded cursor-pointer border border-white/10 bg-black/20 p-1" required>
+                            <span class="text-slate-300 text-sm">Pick a color for analytics</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button type="button" class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-all" onclick="hideModal('categoryModal')">Cancel</button>
+                        <button type="submit" class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Method Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="methodModal" role="dialog" aria-modal="true" aria-labelledby="methodModalLabel" onclick="hideModal('methodModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="methodModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h5 class="text-lg font-bold text-white m-0" id="methodModalLabel">Add Method</h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('methodModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4">
+                <form id="methodForm">
+                    <div class="mb-4">
+                        <label for="methodName" class="block text-sm font-medium mb-1">Name</label>
+                        <input type="text" id="methodName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" placeholder="e.g. Maybank" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="methodColor" class="block text-sm font-medium mb-1">Theme Color</label>
+                        <div class="flex items-center gap-4">
+                            <input type="color" id="methodColor" class="w-12 h-12 rounded cursor-pointer border border-white/10 bg-black/20 p-1" required>
+                            <span class="text-slate-300 text-sm">Pick a color for analytics</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button type="button" class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-all" onclick="hideModal('methodModal')">Cancel</button>
+                        <button type="submit" class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all" id="saveMethod">Save Method</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Entry Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="entryModalLabel" onclick="hideModal('entryModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="entryModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h5 class="text-lg font-bold text-white m-0" id="entryModalLabel">Add Entry</h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('entryModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4">
+                <form id="entryForm">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="entryType" class="block text-sm font-medium mb-1">Type</label>
+                            <select id="entryType" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" required>
+                                <option value="recurring">Recurring</option>
+                                <option value="one-off">One-Off</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="entryCategory" class="block text-sm font-medium mb-1">Category</label>
+                            <select id="entryCategory" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" required>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="entryMethod" class="block text-sm font-medium mb-1">Payment Method</label>
+                        <select id="entryMethod" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" required></select>
+                    </div>
+                    <div class="mb-4">
+                        <label for="entryItem" class="block text-sm font-medium mb-1">Name</label>
+                        <input type="text" id="entryItem" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="e.g. Netflix" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="entryAmount" class="block text-sm font-medium mb-1">Amount (RM)</label>
+                            <input type="number" id="entryAmount" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="0.00" min="0" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="entryDueDay" class="block text-sm font-medium mb-1">Due Day</label>
+                            <input type="number" id="entryDueDay" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="1-31" min="1" max="31" required>
+                        </div>
+                    </div>
+                    
+                    <div id="schedulingFields" class="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="entryStart" class="block text-sm font-medium mb-1" id="startMonthLabel">Start Month</label>
+                            <input type="month" id="entryStart" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" required>
+                        </div>
+                        <div id="endMonthContainer">
+                            <label for="entryEnd" class="block text-sm font-medium mb-1">End Month (Optional)</label>
+                            <input type="month" id="entryEnd" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-6">
+                        <div class="flex gap-2">
+                            <button type="button" class="hidden border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition-all" id="disableEntryBtn" title="Disable Entry">Disable</button>
+                            <button type="button" class="hidden border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg text-sm transition-all" id="deleteEntryBtn" title="Permanent Delete" aria-label="Permanent Delete"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-all" onclick="hideModal('entryModal')">Cancel</button>
+                            <button type="button" class="hidden bg-green-500 text-white hover:bg-green-600 px-4 py-2 rounded-lg font-medium transition-all" id="togglePaidBtn">Mark Paid</button>
+                            <button type="submit" class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all">Save Entry</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Helper Script for basic transitions -->
+    <script>
+        function showModal(id) {
+            const modal = document.getElementById(id);
+            const dialog = document.getElementById(id + 'Dialog');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Trigger reflow
+            void modal.offsetWidth;
+            
+            modal.classList.add('opacity-100');
+            dialog.classList.remove('scale-95', 'opacity-0');
+            dialog.classList.add('scale-100', 'opacity-100');
+            
+            // A11y: shift focus into modal
+            setTimeout(() => {
+                const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                if (focusable) focusable.focus();
+            }, 100);
+        }
+
+        function hideModal(id) {
+            const modal = document.getElementById(id);
+            const dialog = document.getElementById(id + 'Dialog');
+            
+            modal.classList.remove('opacity-100');
+            dialog.classList.remove('scale-100', 'opacity-100');
+            dialog.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+                
+                // Dispatch custom hidden event to replicate bootstrap's hidden.bs.modal
+                modal.dispatchEvent(new Event('hidden.custom.modal'));
+            }, 200);
+        }
+        
+        // A11y: Escape key to close modals
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.fixed.inset-0.z-50.flex');
+                if (openModals.length > 0) {
+                    hideModal(openModals[openModals.length - 1].id);
+                }
+            }
+        });
+    </script>
+
+    <!-- Clear Data Modal -->
+    <div id="clearDataModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity opacity-0 duration-300" role="dialog" aria-modal="true" aria-labelledby="clearDataModalLabel" onclick="window.hideModal('clearDataModal')">
+        <div id="clearDataModalDialog" class="bg-slate-800 border border-rose-500/30 rounded-xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 relative p-6" onclick="event.stopPropagation()">
+            <button class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors" onclick="window.hideModal('clearDataModal')" aria-label="Close dialog">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="text-center mb-6 pt-4">
+                <div class="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                    <i data-lucide="alert-triangle" class="w-8 h-8 text-rose-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2" id="clearDataModalLabel">Delete Everything?</h3>
+                <p class="text-slate-300 text-sm">This action cannot be undone. All your entries, methods, and categories will be permanently erased.</p>
+            </div>
+            <div class="flex gap-3">
+                <button type="button" class="flex-1 bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-lg font-medium transition-all" onclick="window.hideModal('clearDataModal')">Cancel</button>
+                <button type="button" class="flex-1 bg-rose-600 text-white hover:bg-rose-700 hover:shadow-[0_4px_12px_rgba(225,29,72,0.4)] px-4 py-2.5 rounded-lg font-medium transition-all" id="confirmResetBtn">Yes, Delete All</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js?v=3"></script>
+    <script>
+        lucide.createIcons();
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('SW registered: ', registration);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
