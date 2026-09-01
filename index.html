@@ -46,59 +46,282 @@
     <!-- Sortable.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js"></script>
     
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    
     <!-- Premium Styles -->
-    <link rel="stylesheet" href="assets/css/app.css">
+    <link rel="stylesheet" href="assets/css/app.css?v=11">
 </head>
 <body class="bg-gradient-to-br from-slate-900 to-indigo-950 text-slate-100 min-h-screen overflow-x-hidden">
 
     <!-- Sidebar Navigation -->
     <div class="sidebar glass-panel">
-        <a href="#" class="hidden md:flex text-2xl font-bold items-center gap-3 mb-12 text-slate-100 no-underline hover:text-white transition-colors">
-            <i data-lucide="landmark" class="text-accent w-8 h-8"></i>
-            <span>PayTrack</span>
-        </a>
+        <div class="hidden md:flex items-center justify-between mb-8">
+            <a href="#" class="flex text-2xl font-bold items-center gap-3 text-slate-100 no-underline hover:text-white transition-colors">
+                <i data-lucide="landmark" class="text-accent w-8 h-8"></i>
+                <span class="sidebar-logo-text">PayTrack</span>
+            </a>
+            <button id="sidebarToggle" class="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-1.5 rounded-lg" title="Toggle Sidebar">
+                <i data-lucide="chevron-left" class="w-4 h-4 transition-transform duration-300"></i>
+            </button>
+        </div>
         
-        <nav class="contents md:flex md:flex-col gap-2">
-            <a href="#analytics" class="nav-link-custom active" data-view="view-analytics">
-                <i data-lucide="pie-chart" class="w-5 h-5"></i> Analytics
-            </a>
-            <a href="#tracker" class="nav-link-custom" data-view="view-tracker">
-                <i data-lucide="list-checks" class="w-5 h-5"></i> Tracker
-            </a>
-            <a href="#calendar" class="nav-link-custom" data-view="view-calendar">
-                <i data-lucide="calendar-days" class="w-5 h-5"></i> Calendar
-            </a>
-            <a href="#forecast" class="nav-link-custom" data-view="view-forecast">
-                <i data-lucide="trending-up" class="w-5 h-5"></i> Forecast
-            </a>
-        </nav>
-        
-        <div class="contents md:mt-auto md:flex md:flex-col gap-4">
-            <nav class="contents md:flex md:flex-col gap-2">
-                <a href="#methods" class="nav-link-custom" data-view="view-methods">
-                    <i data-lucide="credit-card" class="w-5 h-5"></i> Methods
-                </a>
-                <a href="#categories" class="nav-link-custom" data-view="view-categories">
-                    <i data-lucide="tags" class="w-5 h-5"></i> Categories
-                </a>
-            </nav>
-            <div class="hidden md:block premium-card px-3 py-4 mb-0 text-center text-xs">
-                <p class="mb-2 text-slate-300 whitespace-nowrap">Data securely stored locally.</p>
-                <div class="flex justify-center gap-2 mt-2">
-                    <button class="w-full bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="exportBtn"><i data-lucide="download" class="w-4 h-4"></i> Export</button>
-                    <button class="w-full bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="importBtn"><i data-lucide="upload" class="w-4 h-4"></i> Import</button>
-                    <input type="file" id="importFileInput" accept=".json" hidden>
-                </div>
-                <div class="mt-2">
-                    <button class="w-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg flex items-center justify-center gap-2 transition-all" id="resetDataBtn"><i data-lucide="trash-2" class="w-4 h-4"></i> Clear All Data</button>
-                </div>
+        <div class="hidden md:block mb-6 px-1" id="profileSelectorContainer">
+            <label class="sr-only">Profile</label>
+            <div class="flex items-center gap-2">
+                <select id="profileSelector" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-1.5 text-slate-100 focus:bg-black/40 focus:border-indigo-500 outline-none transition-all appearance-none [&>option]:bg-slate-800 text-sm font-medium">
+                </select>
+                <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 p-1.5 rounded-lg transition-all" id="manageProfilesBtn" title="Manage Profiles"><i data-lucide="settings" class="w-4 h-4"></i></button>
             </div>
         </div>
+        
+        <nav class="contents md:flex md:flex-col gap-2 flex-grow overflow-y-auto overflow-x-hidden custom-scrollbar">
+            <!-- Mobile only profile button -->
+            <button class="md:hidden nav-link-custom !p-2 !min-w-[50px] !w-[50px]" id="mobileProfileBtn" title="Profiles">
+                <i data-lucide="users" class="w-5 h-5 mx-auto"></i>
+            </button>
+            
+            <div class="nav-header hidden md:block">Overview</div>
+            <a href="#dashboard" class="nav-link-custom active" data-view="view-dashboard" data-tooltip="Dashboard">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Dashboard</span>
+            </a>
+            
+            <a href="#analytics" class="nav-link-custom" data-view="view-analytics" data-tooltip="Analytics">
+                <i data-lucide="bar-chart-2" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Analytics</span>
+            </a>
+            <a href="#calendar" class="nav-link-custom" data-view="view-calendar" data-tooltip="Calendar">
+                <i data-lucide="calendar" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Calendar</span>
+            </a>
+            
+            <div class="nav-header hidden md:block">Transactions</div>
+            <a href="#daily" class="nav-link-custom" data-view="view-daily" data-tooltip="Daily Log">
+                <i data-lucide="sun" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Daily Log</span>
+            </a>
+            <a href="#tracker" class="nav-link-custom" data-view="view-tracker" data-tooltip="Tracker">
+                <i data-lucide="list-todo" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Tracker</span>
+            </a>
+            
+            <div class="nav-header hidden md:block">Planning</div>
+            <a href="#forecast" class="nav-link-custom" data-view="view-forecast" data-tooltip="Forecast">
+                <i data-lucide="trending-up" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Forecast</span>
+            </a>
+            <a href="#goals" class="nav-link-custom" data-view="view-goals" data-tooltip="Goals">
+                <i data-lucide="target" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Goals</span>
+            </a>
+            <a href="#budgets" class="nav-link-custom" data-view="view-budgets" data-tooltip="Budgets">
+                <i data-lucide="wallet" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Budgets</span>
+            </a>
+            
+            <div class="nav-header hidden md:block">Settings</div>
+            <a href="#methods" class="nav-link-custom" data-view="view-methods" data-tooltip="Methods">
+                <i data-lucide="credit-card" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Methods</span>
+            </a>
+            <a href="#categories" class="nav-link-custom" data-view="view-categories" data-tooltip="Categories">
+                <i data-lucide="tags" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Categories</span>
+            </a>
+            <a href="#data" class="nav-link-custom" data-view="view-data" data-tooltip="Data">
+                <i data-lucide="database" class="w-5 h-5 opacity-75"></i> <span class="nav-link-text">Data</span>
+            </a>
+            
+        </nav>
     </div>
 
     <!-- Main Content Area -->
     <div class="main-content">
         
+        <!-- ==================== DASHBOARD VIEW ==================== -->
+        <div id="view-dashboard" class="view-container active">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-2" id="dashboardGreeting">Welcome back!</h2>
+                <p class="text-slate-300 m-0">Here's a quick look at where you stand today.</p>
+            </div>
+            
+            <div class="columns-1 md:columns-2 xl:columns-3 gap-6">
+                
+                <!-- Today's Glance -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="sun" class="w-5 h-5 text-yellow-400"></i> Today</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-daily\']').click()">View Daily Log</button>
+                    </div>
+                    <div id="dashboardTodayList" class="flex flex-col gap-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Upcoming Bills -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="calendar-clock" class="w-5 h-5 text-amber-400"></i> Upcoming Bills</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-tracker\']').click()">View Tracker</button>
+                    </div>
+                    <div id="dashUpcomingBills" class="flex flex-col gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Monthly Snapshot -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i> Month Snapshot</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-analytics\']').click()">View Analytics</button>
+                    </div>
+                    <div class="flex flex-col justify-center">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-slate-300">Income</span>
+                            <span class="text-sm font-bold text-success" id="dashTotalIncome">RM 0.00</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-4">
+                            <div class="bg-success h-full transition-all duration-500" id="dashIncomeBar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-slate-300">Outgoings (Exp + Sav)</span>
+                            <span class="text-sm font-bold text-danger" id="dashTotalOut">RM 0.00</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-6 flex">
+                            <div class="bg-danger h-full transition-all duration-500" id="dashExpenseBar" style="width: 0%"></div>
+                            <div class="bg-yellow-400 h-full transition-all duration-500" id="dashSavingsBar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/10 flex justify-between items-center">
+                            <span class="text-sm font-bold text-slate-200">Net Cash Flow</span>
+                            <span class="text-sm font-bold" id="dashNetCashFlow">RM 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Overview -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="wallet" class="w-5 h-5 text-sky-400"></i> Budgets Overview</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-budgets\']').click()">Manage</button>
+                    </div>
+                    <div id="dashboardBudgetWidget" class="flex flex-col gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Category Breakdown -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="pie-chart" class="w-5 h-5 text-purple-400"></i> This Month's Categories</h5>
+                    </div>
+                    <div class="chart-wrapper relative h-[250px] w-full">
+                        <canvas id="dashCategoryChart"></canvas>
+                        <div id="dashCategoryEmpty" class="absolute inset-0 hidden flex-col items-center justify-center text-slate-400">
+                            <i data-lucide="pie-chart" class="w-10 h-10 mb-2 opacity-30"></i>
+                            <span class="text-sm">No expenses yet</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6-Month Macro Flow -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="trending-up" class="w-5 h-5 text-indigo-400"></i> 6-Month Macro Flow</h5>
+                    </div>
+                    <div class="chart-wrapper h-[250px] w-full relative">
+                        <canvas id="dashMacroChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="activity" class="w-5 h-5 text-rose-400"></i> Recent Activity</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-daily\']').click()">View All</button>
+                    </div>
+                    <div id="dashRecentActivity" class="flex flex-col gap-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Goal Focus -->
+                <div class="premium-card flex flex-col break-inside-avoid mb-6 inline-block w-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <h5 class="text-lg font-bold m-0 flex items-center gap-2"><i data-lucide="target" class="w-5 h-5 text-emerald-400"></i> Nearest Goal</h5>
+                        <button class="text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors" onclick="document.querySelector('[data-view=\'view-goals\']').click()">View Goals</button>
+                    </div>
+                    <div id="dashboardNearestGoal" class="flex flex-col justify-center text-center">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ==================== DAILY LOG VIEW ==================== -->
+        <div id="view-daily" class="view-container">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Daily Log</h2>
+                    <p class="text-slate-300 m-0">Track and view your day-to-day expenses.</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="prevDayBtn"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <input type="date" id="dailyLogDate" class="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 outline-none transition-all font-bold text-center w-[160px]">
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all" id="nextDayBtn"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    <button class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-3 py-2 rounded-lg transition-all text-sm font-medium whitespace-nowrap" id="resetDailyDateBtn">Today</button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                <!-- Add Quick Entry Form -->
+                <div class="lg:col-span-1">
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Quick Add</h5>
+                        <form id="dailyEntryForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Item Name</label>
+                                <input type="text" id="dailyEntryItem" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="e.g. Coffee" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Amount (RM)</label>
+                                <input type="number" id="dailyEntryAmount" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400 font-mono" placeholder="0.00" step="0.01" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Category</label>
+                                <div class="relative">
+                                    <select id="dailyEntryCategory" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" required></select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Payment Method</label>
+                                <div class="relative">
+                                    <select id="dailyEntryMethod" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all appearance-none [&>option]:bg-slate-800" required></select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                                        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex justify-center items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Log Expense</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Log List -->
+                <div class="lg:col-span-3 flex flex-col min-h-[300px]">
+                    <div class="premium-card flex-grow flex flex-col mb-0">
+                        <div class="flex justify-between items-center mb-4 flex-none">
+                            <h5 class="text-lg font-bold m-0">Expenses for <span id="dailyLogTitleStr" class="text-indigo-400">Today</span></h5>
+                            <div class="text-xl font-bold text-accent" id="dailyTotalAmount">RM 0.00</div>
+                        </div>
+                        <div id="dailyEntriesContainer" class="flex flex-col gap-2 overflow-y-auto pr-2 flex-grow">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== TRACKER VIEW ==================== -->
         <div id="view-tracker" class="view-container">
             <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
@@ -152,15 +375,25 @@
                 </div>
             </div>
             
-            <div class="premium-card !p-0 flex-grow relative mb-0 overflow-hidden">
-                <div class="absolute inset-5">
-                    <div id="calendar" class="h-full w-full"></div>
+            <div class="premium-card !p-0 flex-grow relative mb-0 flex flex-col overflow-hidden">
+                <div class="px-5 py-3 border-b border-white/10 flex justify-between items-center bg-black/20 z-10">
+                    <h3 class="font-semibold text-slate-200">Expense Calendar</h3>
+                    <div class="flex bg-black/30 rounded-lg p-1 border border-white/5" id="calendarFilterGroup">
+                        <button class="cal-filter-btn active px-4 py-1.5 text-xs font-medium rounded-md text-slate-300 transition-all bg-indigo-500/20 text-white shadow-sm" data-filter="Both">Both</button>
+                        <button class="cal-filter-btn px-4 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 transition-all" data-filter="Monthly">Monthly</button>
+                        <button class="cal-filter-btn px-4 py-1.5 text-xs font-medium rounded-md text-slate-400 hover:text-slate-200 transition-all" data-filter="Daily">Daily</button>
+                    </div>
+                </div>
+                <div class="relative flex-grow min-h-[400px]">
+                    <div class="absolute inset-5">
+                        <div id="calendar" class="h-full w-full"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- ==================== ANALYTICS VIEW ==================== -->
-        <div id="view-analytics" class="view-container active flex flex-col min-h-[calc(100vh-6rem)] md:min-h-0 md:h-[calc(100vh-3rem)]">
+        <div id="view-analytics" class="view-container flex flex-col min-h-[calc(100vh-6rem)] xl:min-h-0 xl:h-[calc(100vh-3rem)]">
             <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
                 <div>
                     <h2 class="text-3xl font-bold mb-1">Analytics</h2>
@@ -179,25 +412,47 @@
                 <div class="xl:col-span-1 flex flex-col gap-6 min-h-0">
                     <div class="premium-card mb-0 flex-none py-4">
                         <h6 class="text-slate-300 mb-3 text-sm font-bold uppercase tracking-wider">Cash Flow Summary</h6>
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex justify-between items-center mb-1">
                             <span class="text-sm text-slate-300">Income</span>
                             <span class="text-sm font-bold text-success" id="analyticsTotalIncome">RM 0.00</span>
                         </div>
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-3">
+                            <div class="bg-success h-full transition-all duration-500" id="analyticsIncomeBar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-1">
                             <span class="text-sm text-slate-300">Expenses</span>
                             <span class="text-sm font-bold text-danger" id="analyticsTotalExpense">RM 0.00</span>
                         </div>
-                        <div class="w-full bg-black/30 h-2 rounded-full overflow-hidden mt-3 flex">
-                            <div class="bg-success h-full transition-all duration-500" id="analyticsIncomeBar" style="width: 50%"></div>
-                            <div class="bg-danger h-full transition-all duration-500" id="analyticsExpenseBar" style="width: 50%"></div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm text-slate-300">Savings</span>
+                            <span class="text-sm font-bold text-yellow-400" id="analyticsTotalSavings">RM 0.00</span>
+                        </div>
+                        <div class="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden mb-4 flex">
+                            <div class="bg-danger h-full transition-all duration-500" id="analyticsExpenseBar" style="width: 0%"></div>
+                            <div class="bg-yellow-400 h-full transition-all duration-500" id="analyticsSavingsBar" style="width: 0%"></div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/10 flex justify-between items-center mt-auto">
+                            <span class="text-sm font-bold text-slate-200">Net Cash Flow</span>
+                            <span class="text-sm font-bold" id="analyticsNetCashFlow">RM 0.00</span>
                         </div>
                     </div>
 
-                    <div class="premium-card mb-0 flex flex-col justify-center text-center py-4 flex-none">
-                        <p class="text-slate-300 mb-1">Total Spending</p>
-                        <div class="stat-value text-3xl" id="analyticsTotalSpending">RM 0.00</div>
-                        <div class="mt-2 text-sm" id="analyticsMoM">
-                            <!-- Populated by JS -->
+                    <div class="grid grid-cols-2 gap-4 mb-0 flex-none">
+                        <div class="premium-card flex flex-col justify-center text-center py-4 px-2">
+                            <p class="text-slate-300 mb-1 text-xs uppercase tracking-wider">Spending</p>
+                            <div class="stat-value text-xl md:text-2xl" id="analyticsTotalSpending">RM 0.00</div>
+                            <div class="mt-2 text-xs" id="analyticsMoM">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                        <div class="premium-card flex flex-col justify-center text-center py-4 px-2">
+                            <p class="text-slate-300 mb-1 text-xs uppercase tracking-wider">Savings</p>
+                            <div class="stat-value text-xl md:text-2xl text-yellow-400" id="analyticsTotalSavingsCard">RM 0.00</div>
+                            <div class="mt-2 text-xs" id="analyticsSavingsMoM">
+                                <!-- Populated by JS -->
+                            </div>
                         </div>
                     </div>
                     
@@ -327,6 +582,20 @@
                                 <label class="px-3 py-1.5 text-sm font-medium border border-l-0 border-white/10 rounded-r-lg cursor-pointer bg-black/20 text-slate-300 peer-checked/yearly:bg-indigo-600 peer-checked/yearly:text-white peer-checked/yearly:border-indigo-600 hover:bg-white/10" for="viewYearly">Yearly</label>
                             </div>
                         </div>
+                        <div class="flex justify-center gap-6 mb-4 text-sm font-medium">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-1 rounded bg-[#eab308]"></div>
+                                <span class="text-slate-300">Rolling Balance</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-sm bg-green-500/70"></div>
+                                <span class="text-slate-300">Income</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-sm bg-red-500/70"></div>
+                                <span class="text-slate-300">Expenses</span>
+                            </div>
+                        </div>
                         <div class="chart-wrapper overflow-x-auto overflow-y-hidden w-full custom-scrollbar">
                             <div class="chart-area w-[2800px] h-[400px]" id="chartAreaContainer">
                                 <canvas id="forecastChart"></canvas>
@@ -358,32 +627,232 @@
         </div>
 
         <!-- ==================== CATEGORIES VIEW ==================== -->
-        <div id="view-categories" class="view-container">
+        <div id="view-categories" class="view-container lg:h-[calc(100vh-4rem)] lg:flex lg:flex-col">
             <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
                 <div>
                     <h2 class="text-3xl font-bold mb-1">Category Management</h2>
                     <p class="text-slate-300 m-0">Customize your expense categories and colors.</p>
                 </div>
-                <button class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2" id="addCategoryBtn"><i data-lucide="plus" class="w-5 h-5"></i> Add Category</button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="categoriesGrid">
-                <!-- Categories populated by JS -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Quick Add Form -->
+                <div class="lg:col-span-1">
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Quick Add</h5>
+                        <form id="addCategoryForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                                <input type="text" id="addCategoryName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="e.g. Groceries" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Theme Color</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="color" id="addCategoryColor" class="w-12 h-10 rounded cursor-pointer border border-white/10 bg-black/20 p-1" required>
+                                    <span class="text-slate-400 text-sm">Pick a color for analytics</span>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex justify-center items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Add Category</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Categories Grid -->
+                <div class="lg:col-span-3 lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="categoriesGrid">
+                        <!-- Categories populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== GOALS VIEW ==================== -->
+        <div id="view-goals" class="view-container lg:h-[calc(100vh-4rem)] lg:flex lg:flex-col">
+            <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-1">Savings Goals</h2>
+                    <p class="text-slate-300 m-0">Calculate exactly how much you need to save to reach your milestones.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:flex-1 lg:min-h-0">
+                <!-- Quick Add Form -->
+                <div class="lg:col-span-1">
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Quick Add</h5>
+                        <form id="addGoalForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Goal Name</label>
+                                <input type="text" id="addGoalName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="e.g. New Car" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Target Amount (RM)</label>
+                                <input type="number" id="addGoalTarget" step="0.01" min="1" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400 font-mono" placeholder="0.00" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Already Saved (RM)</label>
+                                <input type="number" id="addGoalCurrent" step="0.01" min="0" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400 font-mono" placeholder="0.00" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Target Date</label>
+                                <input type="text" id="addGoalDate" class="month-picker w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" required>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex justify-center items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Add Goal</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Goals Lists & Graph -->
+                <div class="lg:col-span-3 flex flex-col min-h-0 lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2">
+                    <div id="goalsMasterGraphContainer" class="premium-card mb-6 hidden flex-none">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-200 text-sm uppercase tracking-wider">Overall Savings Trajectory</h3>
+                        </div>
+                        <div class="h-64 relative w-full">
+                            <canvas id="goalsMasterChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow pr-2 pb-4">
+                        <div id="goalsList" class="columns-1 md:columns-[400px] gap-6">
+                            <!-- Populated by JS -->
+                        </div>
+                        
+                        <h5 class="text-slate-400 font-bold mt-8 mb-4 items-center gap-2 hidden" id="completedGoalsHeading">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i> Completed Goals
+                        </h5>
+                        <div id="completedGoalsList" class="columns-1 md:columns-[400px] gap-6">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== BUDGETS VIEW ==================== -->
+        <div id="view-budgets" class="view-container">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2">Budgets</h2>
+                    <p class="text-slate-300 m-0">Track and manage your spending limits per category.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="bg-white/5 border border-white/10 hover:bg-white/10 p-2 rounded-lg transition-all" onclick="changeBudgetDate(-1)"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <div class="text-lg font-bold min-w-[140px] text-center" id="budgetDisplayDate">Month Year</div>
+                    <button class="bg-white/5 border border-white/10 hover:bg-white/10 p-2 rounded-lg transition-all" onclick="changeBudgetDate(1)"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="budgetsList">
+                <!-- Populated by JS -->
             </div>
         </div>
 
         <!-- ==================== METHODS VIEW ==================== -->
-        <div id="view-methods" class="view-container">
+        <div id="view-methods" class="view-container lg:h-[calc(100vh-4rem)] lg:flex lg:flex-col">
             <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 flex-none gap-4">
                 <div>
                     <h2 class="text-3xl font-bold mb-1">Payment Methods</h2>
-                    <p class="text-slate-300 m-0">Manage your payment methods and theme colors.</p>
+                    <p class="text-slate-300 m-0">Manage your accounts, cards, and payment sources.</p>
                 </div>
-                <button class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2" id="addMethodBtn"><i data-lucide="plus" class="w-5 h-5"></i> Add Method</button>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6" id="methodsGrid">
-                <!-- Methods populated by JS -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:flex-1 lg:min-h-0">
+                <!-- Quick Add Form -->
+                <div class="lg:col-span-1">
+                    <div class="premium-card">
+                        <h5 class="text-lg font-bold mb-4">Quick Add</h5>
+                        <form id="addMethodForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                                <input type="text" id="addMethodName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="e.g. Credit Card" required>
+                            </div>
+                            <div class="mb-5">
+                                <label class="block text-sm font-medium text-slate-300 mb-1">Theme Color</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="color" id="addMethodColor" class="w-12 h-10 rounded cursor-pointer border border-white/10 bg-black/20 p-1" required>
+                                    <span class="text-slate-400 text-sm">Pick a color for analytics</span>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all duration-300 flex justify-center items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Add Method</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Methods Grid -->
+                <div class="lg:col-span-3 lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="methodsGrid">
+                        <!-- Methods populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DATA VIEW ==================== -->
+        <div id="view-data" class="view-container">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold mb-2">Data Management</h2>
+                <p class="text-slate-300 m-0">Import, export, or clear your financial data securely.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Import Card -->
+                <div class="premium-card p-6 flex flex-col h-full">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-indigo-500/20 p-3 rounded-xl border border-indigo-500/30">
+                            <i data-lucide="download" class="w-6 h-6 text-indigo-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Import Data</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">Restore data from a JSON backup. You can merge this as a new profile, or completely overwrite your current active profile.</p>
+                    <input type="file" id="dataImportInput" accept=".json" hidden>
+                    <div class="flex flex-col gap-3">
+                        <button class="w-full bg-indigo-500 text-white hover:bg-indigo-600 px-4 py-2 rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)]" onclick="document.getElementById('dataImportInput').click(); window.importTarget = 'new';">
+                            Import as New Profile
+                        </button>
+                        <button class="w-full bg-white/5 border border-white/10 text-white hover:bg-white/10 px-4 py-2 rounded-lg font-medium transition-all" onclick="document.getElementById('dataImportInput').click(); window.importTarget = 'overwrite';">
+                            Overwrite Current Profile
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Export Card -->
+                <div class="premium-card p-6 flex flex-col h-full">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-emerald-500/20 p-3 rounded-xl border border-emerald-500/30">
+                            <i data-lucide="upload" class="w-6 h-6 text-emerald-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Export Data</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">Download a secure JSON backup of your data. Store this file safely to ensure you never lose your financial history.</p>
+                    <div class="flex flex-col gap-3">
+                        <button class="w-full bg-emerald-500 text-white hover:bg-emerald-600 px-4 py-2 rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)]" id="exportCurrentBtn">
+                            Export Current Profile
+                        </button>
+                        <button class="w-full bg-white/5 border border-white/10 text-white hover:bg-white/10 px-4 py-2 rounded-lg font-medium transition-all" id="exportAllBtn">
+                            Export All Profiles
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clear Data Card -->
+                <div class="premium-card p-6 flex flex-col h-full border-red-500/20">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-red-500/20 p-3 rounded-xl border border-red-500/30">
+                            <i data-lucide="alert-triangle" class="w-6 h-6 text-red-400"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-red-400">Clear Data</h3>
+                    </div>
+                    <p class="text-slate-400 text-sm mb-6 flex-grow">Permanently delete your data. This action is irreversible. Please ensure you have exported a backup before proceeding.</p>
+                    <div class="flex flex-col gap-3">
+                        <button class="w-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg font-medium transition-all" onclick="promptClearData('current')">
+                            Clear Current Profile
+                        </button>
+                        <button class="w-full bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg font-medium transition-all" onclick="promptClearData('all')">
+                            Clear All Data (Factory Reset)
+                        </button>
+                    </div>
+                </div>
+                
             </div>
         </div>
 
@@ -399,10 +868,10 @@
                 <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('categoryModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-4">
-                <form id="categoryForm">
+                <form id="categoryEditForm">
                     <div class="mb-4">
                         <label for="categoryName" class="block text-sm font-medium mb-1">Name</label>
-                        <input type="text" id="categoryName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" placeholder="e.g. Shopping" required>
+                        <input type="text" id="categoryName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" placeholder="e.g. Groceries" required>
                     </div>
                     <div class="mb-6">
                         <label for="categoryColor" class="block text-sm font-medium mb-1">Theme Color</label>
@@ -428,7 +897,7 @@
                 <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('methodModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <div class="p-4">
-                <form id="methodForm">
+                <form id="methodEditForm">
                     <div class="mb-4">
                         <label for="methodName" class="block text-sm font-medium mb-1">Name</label>
                         <input type="text" id="methodName" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" placeholder="e.g. Maybank" required>
@@ -484,7 +953,7 @@
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
                             <label for="entryAmount" class="block text-sm font-medium mb-1">Amount (RM)</label>
-                            <input type="number" id="entryAmount" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="0.00" min="0" step="0.01" required>
+                            <input type="number" id="entryAmount" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all placeholder-slate-400" placeholder="0.00" step="0.01" required>
                         </div>
                         <div>
                             <label for="entryDueDay" class="block text-sm font-medium mb-1">Due Day</label>
@@ -495,11 +964,11 @@
                     <div id="schedulingFields" class="grid grid-cols-2 gap-4 mb-6">
                         <div>
                             <label for="entryStart" class="block text-sm font-medium mb-1" id="startMonthLabel">Start Month</label>
-                            <input type="month" id="entryStart" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" required>
+                            <input type="text" id="entryStart" class="month-picker w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all" required>
                         </div>
                         <div id="endMonthContainer">
                             <label for="entryEnd" class="block text-sm font-medium mb-1">End Month (Optional)</label>
-                            <input type="month" id="entryEnd" class="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all">
+                            <input type="text" id="entryEnd" class="month-picker w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:bg-black/40 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 outline-none transition-all">
                         </div>
                     </div>
 
@@ -515,6 +984,41 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Profile Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="profileModal" role="dialog" aria-modal="true" aria-labelledby="profileModalLabel" onclick="hideModal('profileModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="profileModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h5 class="text-lg font-bold text-white m-0" id="profileModalLabel">Manage Profiles</h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('profileModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4">
+                <form id="addProfileForm" class="flex flex-col gap-3 mb-6 border-b border-white/10 pb-4">
+                    <div class="flex gap-2">
+                        <input type="text" id="newProfileName" class="flex-grow bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:border-indigo-500 outline-none transition-all" placeholder="New Profile Name" required>
+                        <button type="submit" class="bg-indigo-500 text-white hover:bg-indigo-600 px-4 py-2 rounded-lg font-medium transition-all">Add</button>
+                    </div>
+                    <div class="text-xs text-slate-400 mt-1">Copy data from current profile:</div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-300">
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="copyMethods" class="rounded border-white/20 bg-black/20 text-indigo-500 focus:ring-indigo-500/50"> Payment Methods
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="copyEntries" class="rounded border-white/20 bg-black/20 text-indigo-500 focus:ring-indigo-500/50"> Expenses & Bills
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-white transition-colors">
+                            <input type="checkbox" id="copySettings" class="rounded border-white/20 bg-black/20 text-indigo-500 focus:ring-indigo-500/50"> Forecast Settings
+                        </label>
+                    </div>
+                </form>
+                <div class="text-sm font-medium text-slate-400 mb-2">Existing Profiles</div>
+                <div id="profilesList" class="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    <!-- Populated by JS -->
+                </div>
             </div>
         </div>
     </div>
@@ -569,27 +1073,132 @@
         });
     </script>
 
-    <!-- Clear Data Modal -->
-    <div id="clearDataModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity opacity-0 duration-300" role="dialog" aria-modal="true" aria-labelledby="clearDataModalLabel" onclick="window.hideModal('clearDataModal')">
-        <div id="clearDataModalDialog" class="bg-slate-800 border border-rose-500/30 rounded-xl w-full max-w-sm mx-4 shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 relative p-6" onclick="event.stopPropagation()">
-            <button class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors" onclick="window.hideModal('clearDataModal')" aria-label="Close dialog">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            <div class="text-center mb-6 pt-4">
-                <div class="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
-                    <i data-lucide="alert-triangle" class="w-8 h-8 text-rose-400"></i>
-                </div>
-                <h3 class="text-2xl font-bold mb-2" id="clearDataModalLabel">Delete Everything?</h3>
-                <p class="text-slate-300 text-sm">This action cannot be undone. All your entries, methods, and categories will be permanently erased.</p>
+
+    <!-- Goal Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="goalModal" role="dialog" aria-modal="true" aria-labelledby="goalModalLabel" onclick="hideModal('goalModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="goalModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h3 class="text-xl font-bold m-0" id="goalModalLabel">Add Goal</h3>
+                <button class="text-slate-400 hover:text-white transition-colors" onclick="hideModal('goalModal')"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
-            <div class="flex gap-3">
-                <button type="button" class="flex-1 bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white px-4 py-2.5 rounded-lg font-medium transition-all" onclick="window.hideModal('clearDataModal')">Cancel</button>
-                <button type="button" class="flex-1 bg-rose-600 text-white hover:bg-rose-700 hover:shadow-[0_4px_12px_rgba(225,29,72,0.4)] px-4 py-2.5 rounded-lg font-medium transition-all" id="confirmResetBtn">Yes, Delete All</button>
+            <div class="p-6">
+                <form id="goalEditForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Goal Name</label>
+                        <input type="text" id="goalName" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all" placeholder="e.g. New Car" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Target Amount (RM)</label>
+                        <input type="number" id="goalTarget" step="0.01" min="1" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Already Saved (RM)</label>
+                        <input type="number" id="goalCurrent" step="0.01" min="0" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all" placeholder="0.00" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Target Date</label>
+                        <input type="text" id="goalDate" class="month-picker w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all" required>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="px-5 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-white/5 transition-all" onclick="hideModal('goalModal')">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-indigo-900/20" id="goalSubmitBtn">Save Goal</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <script src="assets/js/app.js?v=3"></script>
+    <!-- Budget Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle" onclick="hideModal('budgetModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="budgetModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h3 class="text-xl font-bold m-0" id="budgetModalTitle">Set Budget</h3>
+                <button class="text-slate-400 hover:text-white transition-colors" onclick="hideModal('budgetModal')"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="budgetForm">
+                    <input type="hidden" id="budgetCategoryId">
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Category</label>
+                        <input type="text" id="budgetCategoryName" class="w-full bg-slate-800/50 border border-white/10 rounded-lg px-4 py-3 text-slate-300 cursor-not-allowed" disabled>
+                    </div>
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">Budget Limit (RM)</label>
+                        <input type="number" id="budgetAmount" step="0.01" class="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all" placeholder="0.00">
+                    </div>
+                    
+                    <div class="mb-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" id="budgetIsMonthSpecific" class="mt-1 rounded bg-slate-900 border-slate-600 text-indigo-500 focus:ring-indigo-500">
+                            <div>
+                                <span class="block text-sm font-medium text-slate-200">Apply to this month only</span>
+                                <span class="block text-xs text-slate-400 mt-1" id="budgetMonthSpecificHelp">Check this to override the budget specifically for this month. Uncheck to set the global default limit for this category.</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-end gap-3">
+                        <button type="button" class="px-5 py-2.5 rounded-lg font-medium text-slate-300 hover:bg-white/5 transition-all" onclick="hideModal('budgetModal')">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-indigo-900/20">Save Budget</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Data Import Preview Modal -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="dataImportModal" role="dialog" aria-modal="true" aria-labelledby="dataImportModalLabel" onclick="hideModal('dataImportModal')">
+        <div class="bg-slate-800 border border-white/10 rounded-xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="dataImportModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10">
+                <h5 class="text-lg font-bold text-white m-0" id="dataImportModalLabel">Import Preview</h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('dataImportModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="bg-indigo-500/20 p-3 rounded-full">
+                        <i data-lucide="file-json" class="w-8 h-8 text-indigo-400"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg m-0" id="importPreviewTitle">Valid Backup Found</h4>
+                        <p class="text-sm text-slate-400 m-0" id="importPreviewType">Single Profile Backup</p>
+                    </div>
+                </div>
+                
+                <div class="bg-black/20 rounded-lg p-4 border border-white/5 mb-6" id="importPreviewStats">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div class="flex justify-end gap-3 mt-4">
+                    <button type="button" class="bg-white/10 border border-white/10 text-slate-100 hover:bg-white/20 px-4 py-2 rounded-lg font-medium transition-all" onclick="hideModal('dataImportModal')">Cancel</button>
+                    <button type="button" class="bg-indigo-500 text-white hover:bg-indigo-600 hover:shadow-[0_4px_12px_rgba(99,102,241,0.4)] px-4 py-2 rounded-lg font-medium transition-all" id="confirmImportBtn">Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Confirm Modal (Destructive Actions) -->
+    <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity" id="dataConfirmModal" role="dialog" aria-modal="true" aria-labelledby="dataConfirmModalLabel" onclick="hideModal('dataConfirmModal')">
+        <div class="bg-slate-800 border border-red-500/30 rounded-xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0" id="dataConfirmModalDialog" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center p-4 border-b border-white/10 bg-red-500/10">
+                <h5 class="text-lg font-bold text-white m-0 flex items-center gap-2" id="dataConfirmModalLabel">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i> Confirm Action
+                </h5>
+                <button type="button" class="text-slate-300 hover:text-white transition-colors" onclick="hideModal('dataConfirmModal')" aria-label="Close dialog"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 text-center">
+                <p class="text-slate-200 mb-6" id="dataConfirmMessage">Are you sure you want to proceed?</p>
+                <div class="flex flex-col gap-3 mt-4">
+                    <button type="button" class="w-full bg-red-500 text-white hover:bg-red-600 px-4 py-2 rounded-lg font-medium transition-all shadow-[0_0_15px_rgba(239,68,68,0.2)]" id="confirmDestructiveBtn">Yes, I'm sure</button>
+                    <button type="button" class="w-full bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10 hover:text-white px-4 py-2 rounded-lg font-medium transition-all" onclick="hideModal('dataConfirmModal')">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="assets/js/app.js?v=11"></script>
     <script>
         lucide.createIcons();
         if ('serviceWorker' in navigator) {

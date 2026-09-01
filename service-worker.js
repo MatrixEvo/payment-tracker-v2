@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paytrack-v2-cache-v2';
+const CACHE_NAME = 'paytrack-v2-cache-v7';
 const urlsToCache = [
     '/',
     '/index.html',
