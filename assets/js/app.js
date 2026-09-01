@@ -158,12 +158,12 @@
             data = safeJSONParse(s, { methods: [], entries: [], categories: [], goals: [] });
             if (!data.goals) data.goals = [];
         } else {
-            const legacy = localStorage.getItem('paytrack_data');
+            const legacy = localStorage.getItem('paytrack');
             if (legacy) {
                 data = safeJSONParse(legacy, { methods: [], entries: [], categories: [], goals: [] });
                 if (!data.goals) data.goals = [];
                 saveData();
-                localStorage.removeItem('paytrack_data');
+                localStorage.removeItem('paytrack');
             } else {
                 data = { methods: [], entries: [], categories: [], goals: [] };
             }
