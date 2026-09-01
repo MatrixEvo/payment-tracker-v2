@@ -1,10 +1,19 @@
-const CACHE_NAME = 'paytrack-v2-cache-v8';
+const CACHE_NAME = 'paytrack-v2-cache-v10';
 const urlsToCache = [
     '/',
     '/index.html',
+    '/offline.html',
     '/manifest.json',
-    '/assets/css/app.css',
+    '/assets/css/output.css',
     '/assets/js/app.js'
+];
+
+const cdnDomains = [
+    'unpkg.com',
+    'cdn.jsdelivr.net',
+    'cdnjs.cloudflare.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com'
 ];
 
 self.addEventListener('install', event => {
@@ -18,28 +27,72 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // Basic Network First, fallback to cache strategy
-    event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                // Check if we received a valid response (allow basic and cors)
-                if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors' && response.type !== 'default')) {
+    const url = new URL(event.request.url);
+    const isCDN = cdnDomains.some(domain => url.hostname.includes(domain));
+
+    if (isCDN) {
+        // Cache First strategy for CDN assets
+        event.respondWith(
+            caches.match(event.request)
+                .then(cachedResponse => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    
+                    return fetch(event.request)
+                        .then(response => {
+                            if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
+                                return response;
+                            }
+                            
+                            const responseToCache = response.clone();
+                            caches.open(CACHE_NAME)
+                                .then(cache => {
+                                    cache.put(event.request, responseToCache);
+                                });
+                            return response;
+                        })
+                        .catch(() => {
+                            // If network fails and not in cache, return 503 to prevent TypeError
+                            return new Response('CDN Resource Unavailable', { status: 503, statusText: 'Service Unavailable' });
+                        });
+                })
+        );
+    } else {
+        // Network First strategy for main app files
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors' && response.type !== 'default')) {
+                        return response;
+                    }
+                    
+                    const responseToCache = response.clone();
+                    caches.open(CACHE_NAME)
+                        .then(cache => {
+                            cache.put(event.request, responseToCache);
+                        });
                     return response;
-                }
-                
-                // Clone the response because it's a stream and can only be consumed once
-                const responseToCache = response.clone();
-                caches.open(CACHE_NAME)
-                    .then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                return response;
-            })
-            .catch(() => {
-                // Fallback to cache if network fails
-                return caches.match(event.request);
-            })
-    );
+                })
+                .catch(() => {
+                    // Fallback to cache if network fails
+                    return caches.match(event.request)
+                        .then(cachedResponse => {
+                            if (cachedResponse) {
+                                return cachedResponse;
+                            }
+                            
+                            // If not in cache, check if it's a navigation request
+                            if (event.request.mode === 'navigate') {
+                                return caches.match('/offline.html');
+                            }
+                            
+                            // For other missing resources, return 503 to prevent TypeError
+                            return new Response('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+                        });
+                })
+        );
+    }
 });
 
 self.addEventListener('activate', event => {

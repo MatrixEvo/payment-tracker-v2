@@ -1,0 +1,16 @@
+{
+  "name": "payment-tracker-v2",
+  "version": "1.0.0",
+  "description": "Payment Tracker Application",
+  "main": "index.html",
+  "scripts": {
+    "dev": "tailwindcss -i ./assets/css/app.css -o ./assets/css/output.css --watch",
+    "build": "tailwindcss -i ./assets/css/app.css -o ./assets/css/output.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.19"
+  }
+}
